@@ -1,0 +1,55 @@
+# The @dsh-user/dsh-token-cost bundle patch: one dual-face row. The node half
+# registers the `tokenCost` session projection (per-request token accounting
+# priced by the model that actually served each request) and the
+# /api/token-cost/* routes (account balance + price table); the browser half
+# (exports["./client"], discovered through the dsh.client declaration) renders
+# the session cost badge and the sidebar total/balance entry.
+- insert:
+    - id: token-cost
+      name: '@dsh-user/dsh-token-cost'
+      config:
+        # DeepSeek official prices in CNY per 1M tokens. Prices are matched by
+        # the exact model id the request/header event logged; unknown models
+        # fall back to the `default` row. Override any model here (or add new
+        # ids) without touching code — values are merged over the built-in
+        # table, so a partial entry is enough.
+        prices:
+          deepseek-chat:
+            input: 2
+            cacheRead: 0.5
+            cacheWrite: 2
+            output: 8
+          deepseek-reasoner:
+            input: 4
+            cacheRead: 1
+            cacheWrite: 4
+            output: 16
+          deepseek-v3:
+            input: 2
+            cacheRead: 0.5
+            cacheWrite: 2
+            output: 8
+          deepseek-v4:
+            input: 2
+            cacheRead: 0.5
+            cacheWrite: 2
+            output: 8
+          deepseek-v4-flash:
+            input: 1
+            cacheRead: 0.25
+            cacheWrite: 1
+            output: 4
+          default:
+            input: 2
+            cacheRead: 0.5
+            cacheWrite: 2
+            output: 8
+        # Account balance lookup. `apiKeyEnv` is resolved through the
+        # credentials service (same ref the llm-deepseek adapter uses), with
+        # the launching environment as fallback. Set `enabled: false` to turn
+        # the balance lookup off entirely.
+        balance:
+          enabled: true
+          apiKeyEnv: DEEPSEEK_API_KEY
+          baseUrl: https://api.deepseek.com
+          pollMs: 60000
