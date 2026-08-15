@@ -1,0 +1,52 @@
+{
+  "name": "@dsh-user/dsh-token-cost",
+  "version": "0.1.0",
+  "description": "DSH (DeepSeek Harness) web plugin: a draggable whale floating widget showing per-request token cost, session/total spend, and the official DeepSeek account balance",
+  "keywords": [
+    "dsh",
+    "deepseek",
+    "deepseek-harness",
+    "token",
+    "cost",
+    "balance",
+    "plugin",
+    "floating-widget"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "locale",
+        "sessions"
+      ],
+      "platform": "web"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
