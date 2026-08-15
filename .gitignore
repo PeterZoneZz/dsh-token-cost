@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build artifacts
+dist/
+*.tsbuildinfo
+
+# Environment & credentials — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+credentials*.yaml
+.credentials.yaml
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
