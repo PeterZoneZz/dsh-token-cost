@@ -125,11 +125,13 @@ dsh plugin --profile web add file:/path/to/dsh-token-cost
 
 ## 🧪 测试
 
-浏览器半边的回归测试用真实 React 渲染浮窗（React / react-dom 直接取 DSH profile 里已装的那份），覆盖「点击展开卡片」这一路径：
+回归测试不依赖浏览器或 DSH 进程：浏览器半边用真实 React 渲染浮窗（React / react-dom 直接取 DSH profile 里已装的那份），服务端半边用桩上下文挂载路由后直接发请求。
 
 ```sh
 DSH_HOME=<你的 DSH_HOME> node --test     # 或 npm test
 ```
+
+`test/widget.test.mjs` —— 浏览器半边，「点击展开卡片」这条路径：
 
 | 用例 | 覆盖点 |
 |---|---|
@@ -138,6 +140,18 @@ DSH_HOME=<你的 DSH_HOME> node --test     # 或 npm test
 | rc.6 客户端 store 形状（`projections.faceOf`）被读取 | 前端投影读取 API 的兼容性 |
 | 错误边界契约 | 崩溃区域降级为一行提示 |
 | 卡片体与浮窗根都被边界包裹 | 任何渲染错误都不会让鲸鱼消失 |
+
+`test/host.test.mjs` —— 服务端半边：
+
+| 用例 | 覆盖点 |
+|---|---|
+| 注册一个投影单元与一个路由前缀 | `tokenCost` 投影 + `/api/token-cost` |
+| `session` 路由返回热会话的实时 fold | 主路径 |
+| 冷会话回落到投影缓存 | 归档 / 未驻留会话 |
+| 未折叠会话返回 `null` | 新会话不报错 |
+| `summary` 返回平铺聚合 | 前端「累计花费」能读到 |
+| `balance` 返回 `ok/value` 信封 | 余额降级语义 |
+| 未知子路径返回 404 | 不会挂住 socket |
 
 ## ❓ FAQ
 
