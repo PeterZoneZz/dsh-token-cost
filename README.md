@@ -106,6 +106,7 @@ dsh plugin --profile web add file:/path/to/dsh-token-cost
 |---|---|
 | `GET /api/token-cost/balance` | 缓存的官方余额快照（60s 轮询） |
 | `GET /api/token-cost/prices` | 当前生效的价格表 |
+| `GET /api/token-cost/session?id=<sessionId>` | **指定会话**的 tokenCost 投影值（热会话读实时 fold，冷会话读投影缓存），前端浮窗据此显示「本次会话」 |
 | `GET /api/token-cost/summary` | 所有会话的 tokenCost 聚合（费用、tokens、按模型） |
 
 ## 📂 目录结构
@@ -118,8 +119,25 @@ dsh plugin --profile web add file:/path/to/dsh-token-cost
 ├── cordis.patch.yml      # bundle patch：注册 token-cost 行 + 默认配置
 ├── package.json          # dsh.bundle + dsh.client 双面声明
 ├── docs/screenshot.svg   # 效果示意图（可替换为真实截图）
+├── test/widget.test.mjs  # 浏览器半边回归测试（真实 React 渲染）
 └── README.md
 ```
+
+## 🧪 测试
+
+浏览器半边的回归测试用真实 React 渲染浮窗（React / react-dom 直接取 DSH profile 里已装的那份），覆盖「点击展开卡片」这一路径：
+
+```sh
+DSH_HOME=<你的 DSH_HOME> node --test     # 或 npm test
+```
+
+| 用例 | 覆盖点 |
+|---|---|
+| 会话还没有投影值时卡片能正常渲染 | 点击展开不再因 `null` 投影整树崩溃 |
+| host 的平铺载荷渲染成数字 | `session` / `summary` 两个端点的载荷形状 |
+| rc.6 客户端 store 形状（`projections.faceOf`）被读取 | 前端投影读取 API 的兼容性 |
+| 错误边界契约 | 崩溃区域降级为一行提示 |
+| 卡片体与浮窗根都被边界包裹 | 任何渲染错误都不会让鲸鱼消失 |
 
 ## ❓ FAQ
 
@@ -134,6 +152,21 @@ dsh plugin --profile web add file:/path/to/dsh-token-cost
 
 **浮窗挡住了内容？**
 拖动它即可；松手时靠近左右边缘会自动吸附贴边。
+
+## 📝 更新日志
+
+### 0.1.1
+
+桌面端（DSH Desktop）稳定性修复 —— **点击鲸鱼后整个浮窗消失**：
+
+- **修复崩溃根因**：卡片只在点击时才挂载，而 `SessionSection` 只挡住了 `undefined`、没挡住 `null`。会话还没有 `tokenCost` 投影值时 `proj` 就是 `null`，读取 `proj.tokens` 抛 `TypeError`，React 随即卸载整个 root —— 于是「点一下浮窗就不见了」。现在 `null` / 非对象一律降级为「—」。
+- **投影读取 API 适配**：原先读客户端 store 的 `projectionValues.tokenCost`，该字段在 rc.6 的客户端并不存在（`grep` 命中 0 次），所以「本次会话」永远拿不到值。改为：
+  - 主路径 —— 新增 `GET /api/token-cost/session?id=…`，由 host 用 `sessionProjections` 直接给出该会话的投影值（热会话读实时 fold，冷会话读投影缓存）；
+  - 备用路径 —— 按 rc.6 的 `session.projections.faceOf("tokenCost").getSnapshot()` 读取（与内置 `dsh-client-ui-permission-presets` / `-goal` 用法一致），并保留对旧 `projectionValues` 形状的兼容。
+- **累计花费恢复显示**：`/api/token-cost/summary` 返回的是**平铺**聚合对象，而 `TotalSection` 按 `summary.ok / summary.value` 信封读取，导致该栏永远显示「累计数据不可用」。现在两种形状都接受。
+- **双层错误边界**：任何渲染错误只让对应区域降级为一行提示，鲸鱼本体与卡片外壳不再被 React 卸载；即使浮窗整体出错也会退化为一个不消失的兜底按钮，并在控制台打印原始错误。
+- **格式化与轮询加固**：`formatTokens` / `formatCost` / `totalTokensOf` 对缺字段、`NaN`、非对象 token 包一律按 0 处理；会话切换时先清空上一会话的载荷，避免串号；会话投影按 5s 轮询刷新。
+- 补上 React 18.3 的 `key` 传参写法（`jsx(type, props, key)`），并为主新增的子元素补齐 `key`。
 
 ## 📄 License
 

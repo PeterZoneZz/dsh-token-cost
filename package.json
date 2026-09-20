@@ -1,6 +1,6 @@
 {
   "name": "@dsh-user/dsh-token-cost",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DSH (DeepSeek Harness) web plugin: a draggable whale floating widget showing per-request token cost, session/total spend, and the official DeepSeek account balance",
   "keywords": [
     "dsh",
@@ -45,6 +45,9 @@
     "cordis.patch.yml",
     "README.md"
   ],
+  "scripts": {
+    "test": "node --test"
+  },
   "engines": {
     "node": ">=18"
   },
